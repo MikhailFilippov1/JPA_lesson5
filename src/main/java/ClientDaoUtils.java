@@ -5,64 +5,60 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class ProductDaoUtils implements ProductDao{
+public class ClientDaoUtils implements ClientDao{
 
     private SessionFactoryUtils sessionFactoryUtils;
 
     @Autowired
-    public ProductDaoUtils(SessionFactoryUtils sessionFactoryUtils) {
+    public ClientDaoUtils(SessionFactoryUtils sessionFactoryUtils) {
         this.sessionFactoryUtils = sessionFactoryUtils;
     }
 
     @Override
-    public Product findById(Long id) {
+    public Client findById(Long id) {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-            Product product = session.get(Product.class, id);
+            Client client = session.get(Client.class, id);
             session.getTransaction().commit();
-            return product;
+            return client;
         }
     }
 
     @Override
-    public List<Product> findAll() {
+    public List<Client> findAll() {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-            List<Product> products = session.createQuery("select p from Product p").getResultList();
+            List<Client> clients = session.createQuery("select c from Client c").getResultList();
             session.getTransaction().commit();
-            return products;
+            return clients;
         }
     }
 
     @Override
-    public Product findByTitle(String title) {
+    public Client findByName(String name) {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-            Product product = session.createQuery("select p from Product p where p.title = :title", Product.class).setParameter("title", title).getSingleResult();
+            Client client = session.createQuery("select c from Client c where c.name = :name", Client.class).setParameter("name", name).getSingleResult();
             session.getTransaction().commit();
-            return product;
+            return client;
         }
     }
 
     @Override
-    public void save(Product product) {
+    public void save(Client client) {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-            session.saveOrUpdate(product);
+            session.saveOrUpdate(client);
             session.getTransaction().commit();
         }
     }
 
     @Override
-    public void update(Long id, String title) {
+    public void update(Long id, String name) {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-//            session.createQuery("update Product p set p.title = :title where p.id = :id", Product.class)
-//                            .setParameter("title", title)
-//                                    .setParameter("id", id)
-//                    .executeUpdate();
-            Product product = session.get(Product.class, id);
-            product.setTitle(title);
+            Client client = session.get(Client.class, id);
+            client.setName(name);
             session.getTransaction().commit();
         }
     }
@@ -71,28 +67,29 @@ public class ProductDaoUtils implements ProductDao{
     public void deleteById(Long id) {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-            Product product = session.get(Product.class, id);
-            session.delete(product);
+            Client client = session.get(Client.class, id);
+            session.delete(client);
+            session.getTransaction().commit();
+        }
+    }
+
+
+    @Override
+    public void saveOrUpdate(Client client) {
+        try(Session session = sessionFactoryUtils.getSession()) {
+            session.beginTransaction();
+            session.saveOrUpdate(client);
             session.getTransaction().commit();
         }
     }
 
     @Override
-    public void saveOrUpdate(Product product) {
+    public List<Client> getClientsByProductId(Long id) {
         try(Session session = sessionFactoryUtils.getSession()) {
             session.beginTransaction();
-            session.saveOrUpdate(product);
+            List<Client> clients = session.createQuery("SELECT DISTINCT c FROM Client c left join fetch c.products AS p where p.title.id = :id").setParameter("id",id).getResultList();
             session.getTransaction().commit();
-        }
-    }
-
-    @Override
-    public List<Product> getProductsByClientId(Long id) {
-        try(Session session = sessionFactoryUtils.getSession()) {
-            session.beginTransaction();
-            List<Product> products = session.createQuery("SELECT DISTINCT p FROM Product p left join fetch p.clients AS c where c.name.id = :id").setParameter("id",id).getResultList();
-            session.getTransaction().commit();
-            return products;
+            return clients;
         }
     }
 }
